@@ -32,7 +32,7 @@ export default function Learning() {
       return -1;
     }
     const lessons = lessonsByModule[selectedModuleId];
-    return lessons.findIndex(lesson => 
+    return lessons.findIndex(lesson =>
       (selectedLesson._id && lesson._id && selectedLesson._id === lesson._id) ||
       (selectedLesson.id && lesson.id && selectedLesson.id === lesson.id)
     );
@@ -40,10 +40,10 @@ export default function Learning() {
 
   const goToPreviousLesson = () => {
     if (!selectedModuleId || !lessonsByModule[selectedModuleId]) return;
-    
+
     const lessons = lessonsByModule[selectedModuleId];
     const currentIndex = getCurrentLessonIndex();
-    
+
     if (currentIndex > 0) {
       setSelectedLesson(lessons[currentIndex - 1]);
     }
@@ -51,10 +51,10 @@ export default function Learning() {
 
   const goToNextLesson = () => {
     if (!selectedModuleId || !lessonsByModule[selectedModuleId]) return;
-    
+
     const lessons = lessonsByModule[selectedModuleId];
     const currentIndex = getCurrentLessonIndex();
-    
+
     if (currentIndex >= 0 && currentIndex < lessons.length - 1) {
       setSelectedLesson(lessons[currentIndex + 1]);
     }
@@ -119,7 +119,7 @@ export default function Learning() {
             setSelectedLesson(null);
           }
         }
-      } catch {}
+      } catch { }
       setLoadingLessons(prev => ({ ...prev, [selectedModuleId]: false }));
     }
     fetchLessons();
@@ -128,7 +128,7 @@ export default function Learning() {
   return (
     <div className="flex w-full min-h-screen bg-background text-foreground">
       {/* Sidebar: DESKTOP */}
-      <aside 
+      <aside
         className="hidden md:flex flex-col w-64 h-full bg-slate-900 border-r border-slate-700 justify-between fixed top-0 left-0 bottom-0 z-30"
       >
         {/* Logo Header */}
@@ -142,69 +142,69 @@ export default function Learning() {
         </div>
         {/* Menu Content */}
         <div className="flex-1 p-4 space-y-6 overflow-y-auto">
-        <div>
+          <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-3 bg-cyan-400 rounded-full"></div>
               <h3 className="text-white font-semibold text-xs uppercase tracking-wider">MODULLAR</h3>
             </div>
             <div className="space-y-1">
-            {loadingModules ? (
+              {loadingModules ? (
                 <div className="px-2 py-2 text-sm text-gray-400">Yuklanmoqda...</div>
-            ) : error ? (
+              ) : error ? (
                 <div className="px-2 py-2 text-sm text-red-400">{error}</div>
-            ) : modules.length === 0 ? (
+              ) : modules.length === 0 ? (
                 <div className="px-2 py-2 text-sm text-gray-400">Modullar topilmadi</div>
-            ) : (
-              modules.map((mod, idx) => {
-                const modId = mod._id || mod.id;
-                const isOpen = openModuleId === modId;
-                return (
-                  <div key={modId}>
-                    <button
+              ) : (
+                modules.map((mod, idx) => {
+                  const modId = mod._id || mod.id;
+                  const isOpen = openModuleId === modId;
+                  return (
+                    <div key={modId}>
+                      <button
                         className={`w-full flex items-center justify-between px-3 py-2 text-left font-medium rounded-lg transition-all duration-200 ${isOpen ? 'bg-gradient-to-r from-slate-800 to-cyan-900 text-white' : 'text-gray-300 hover:bg-slate-800 hover:text-white'}`}
-                      onClick={() => {
-                        setOpenModuleId(isOpen ? null : modId);
-                        setSelectedModuleId(modId);
-                      }}
-                      aria-expanded={isOpen}
-                      aria-controls={`module-${modId}`}
-                    >
-                      <span>{idx+1}-Modul. {mod.title}</span>
+                        onClick={() => {
+                          setOpenModuleId(isOpen ? null : modId);
+                          setSelectedModuleId(modId);
+                        }}
+                        aria-expanded={isOpen}
+                        aria-controls={`module-${modId}`}
+                      >
+                        <span>{idx + 1}-Modul. {mod.title}</span>
                         {isOpen ? <ChevronDown className="w-5 h-5 text-cyan-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
-                    </button>
-                    {isOpen && (
+                      </button>
+                      {isOpen && (
                         <div className="pl-4 pt-0.5 pb-0.5 flex flex-col gap-1">
-                        {(loadingLessons[modId]) ? (
+                          {(loadingLessons[modId]) ? (
                             <div className="text-xs px-2 text-gray-400">Yuklanmoqda...</div>
-                        ) : lessonsByModule[modId] && lessonsByModule[modId].length > 0 ? (
-                          lessonsByModule[modId].map((lesson) => {
-                            const isActive = selectedLesson && ((selectedLesson._id && lesson._id && selectedLesson._id === lesson._id) || (selectedLesson.id && lesson.id && selectedLesson.id === lesson.id));
-                            return (
-                              <button
-                                key={lesson._id || lesson.id}
+                          ) : lessonsByModule[modId] && lessonsByModule[modId].length > 0 ? (
+                            lessonsByModule[modId].map((lesson) => {
+                              const isActive = selectedLesson && ((selectedLesson._id && lesson._id && selectedLesson._id === lesson._id) || (selectedLesson.id && lesson.id && selectedLesson.id === lesson.id));
+                              return (
+                                <button
+                                  key={lesson._id || lesson.id}
                                   className={`w-full flex flex-row items-center gap-2 py-1 px-2 text-base rounded-md transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-cyan-900 to-blue-900 text-cyan-300 font-semibold' : 'text-gray-300 hover:bg-slate-800 hover:text-white'}`}
-                                onClick={() => {
-                                  setSelectedModuleId(modId);
-                                  setSelectedLesson(lesson);
-                                }}
-                                aria-current={isActive ? 'true' : undefined}
-                              >
+                                  onClick={() => {
+                                    setSelectedModuleId(modId);
+                                    setSelectedLesson(lesson);
+                                  }}
+                                  aria-current={isActive ? 'true' : undefined}
+                                >
                                   <PlayCircle className={`w-4 h-4 ${isActive ? 'text-cyan-300' : 'text-gray-400'}`} />
-                                <span>{lesson.title}</span>
-                              </button>
-                            );
-                          })
-                        ) : (
+                                  <span>{lesson.title}</span>
+                                </button>
+                              );
+                            })
+                          ) : (
                             <div className="text-xs px-2 text-gray-400">Darslar topilmadi</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
+          </div>
         </div>
         {/* User Info - Bottom */}
         <div className="p-4 border-t border-slate-700">
@@ -237,11 +237,11 @@ export default function Learning() {
             </div>
           </div>
         </div>
-        </aside>
+      </aside>
       {/* Sidebar: MOBILE OFFCANVAS */}
-      <button 
+      <button
         className="fixed md:hidden top-4 left-4 z-50 bg-transparent text-[var(--primary)] p-3 rounded-full flex items-center justify-center transition-all hover:bg-[#4169e11a] focus:bg-[#4169e11a]"
-        style={{width: 48, height: 48}}
+        style={{ width: 48, height: 48 }}
         onClick={() => setMobileSidebarOpen(true)}
         aria-label="Modullarni ochish"
       >
@@ -284,7 +284,7 @@ export default function Learning() {
                           aria-expanded={isOpen}
                           aria-controls={`module-${modId}`}
                         >
-                          <span>{idx+1}-Modul. {mod.title}</span>
+                          <span>{idx + 1}-Modul. {mod.title}</span>
                           {isOpen ? <ChevronDown className="w-5 h-5 text-cyan-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                         </button>
                         {isOpen && (
@@ -403,12 +403,25 @@ export default function Learning() {
               <Skeleton className="w-full h-full rounded-2xl" />
             ) : selectedLesson && selectedLesson.videoUrl ? (
               <video
-                src={selectedLesson?.videoUrl}
+                src={selectedLesson.videoUrl}
                 controls
                 className="w-full h-full rounded-2xl"
                 poster={selectedLesson.posterUrl || undefined}
                 style={{ background: MAIN_BG }}
-              />
+                preload="metadata"
+                crossOrigin="anonymous"
+                onError={(e) => {
+                  console.error('Video yuklashda xatolik:', e);
+                  console.log('Video URL:', selectedLesson.videoUrl);
+                }}
+                onLoadStart={() => console.log('Video yuklash boshlandi')}
+                onCanPlay={() => console.log('Video ijro qilishga tayyor')}
+              >
+                <source src={selectedLesson.videoUrl} type="video/mp4" />
+                <source src={selectedLesson.videoUrl} type="video/webm" />
+                <source src={selectedLesson.videoUrl} type="video/ogg" />
+                Sizning brauzeringiz video formatini qo'llab-quvvatlamaydi.
+              </video>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-lg text-muted-foreground">Video mavjud emas</div>
             )}
@@ -434,11 +447,10 @@ export default function Learning() {
             <button
               onClick={goToPreviousLesson}
               disabled={!canGoPrevious()}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
-                canGoPrevious()
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${canGoPrevious()
                   ? 'bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
                   : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-              }`}
+                }`}
             >
               <ChevronLeft className="w-5 h-5" />
               <span>Oldingi</span>
@@ -447,17 +459,16 @@ export default function Learning() {
             <button
               onClick={goToNextLesson}
               disabled={!canGoNext()}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
-                canGoNext()
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${canGoNext()
                   ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
                   : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-              }`}
+                }`}
             >
               <span>Keyingi</span>
               <ChevronRightNav className="w-5 h-5" />
             </button>
           </div>
-          </div>
+        </div>
       </div>
     </div>
   );
