@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTelegramAuth } from "@/hooks/useTelegramAuth";
-import TelegramAuthModal from "@/components/TelegramAuthModal";
+
 import { saveJwtToken, getJwtToken, removeJwtToken } from "@/lib/cookie";
 import {
   Sidebar,
@@ -1053,23 +1052,7 @@ function ProfileContent({ setIsLoggedIn, setActiveTab, setActiveProject }) {
     password: "",
     confirmPassword: ""
   });
-  // Yangi Telegram auth hook
-  const {
-    isLoading: telegramLoading,
-    error: telegramError,
-    telegramData,
-    startTelegramAuth,
-    clearError: clearTelegramError
-  } = useTelegramAuth();
-  
-  const [showTelegramModal, setShowTelegramModal] = useState(false);
 
-  // Telegram data kelganda modal ochish
-  useEffect(() => {
-    if (telegramData && !showTelegramModal) {
-      setShowTelegramModal(true);
-    }
-  }, [telegramData, showTelegramModal]);
 
   // Format date function
   const formatDate = (dateString) => {
@@ -1235,32 +1218,11 @@ function ProfileContent({ setIsLoggedIn, setActiveTab, setActiveProject }) {
       return;
     }
 
-    if (!isLoginMode) {
-      // Yangi Telegram auth tizimini ishlatamiz
-      console.log('Starting Telegram auth...');
-      const success = await startTelegramAuth({
-        fullName: formData.fullName,
-        phone: formData.phone,
-        password: formData.password,
-        role: "student"
-      });
 
-      console.log('Telegram auth result:', success, telegramData, telegramError);
-
-      if (success) {
-        // Success bo'lsa modal ochiladi, telegramData hook ichida set qilinadi
-        setShowTelegramModal(true);
-      } else if (telegramError) {
-        setError(telegramError);
-      }
-      
-      setLoading(false);
-      return;
-    }
 
     try {
       const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
-              const body = isLoginMode 
+      const body = isLoginMode 
         ? { phone: formData.phone, password: formData.password }
         : { 
             fullName: formData.fullName, 
@@ -1292,6 +1254,9 @@ function ProfileContent({ setIsLoggedIn, setActiveTab, setActiveProject }) {
           window.location.href = '/admin';
           return;
         }
+        
+        // Redirect to profile page
+        window.location.hash = '#profile';
         
         // Reset form
         setFormData({
@@ -1445,40 +1410,7 @@ function ProfileContent({ setIsLoggedIn, setActiveTab, setActiveProject }) {
                 {loading ? "Kutilmoqda..." : (isLoginMode ? "Tizimga kirish" : "Ro'yxatdan o'tish")}
               </Button>
             </form>
-            {/* Yangi Telegram Auth Modal */}
-            {telegramData && (
-              <TelegramAuthModal
-                isOpen={showTelegramModal}
-                onClose={() => {
-                  setShowTelegramModal(false);
-                  clearTelegramError();
-                }}
-                telegramData={telegramData}
-                onSuccess={(token, user) => {
-                  // JWT token ni cookie ga saqlash
-                  saveJwtToken(token);
-                  
-                  // State'larni yangilash
-                  setShowTelegramModal(false);
-                  setSuccess("Ro'yxatdan o'tish muvaffaqiyatli yakunlandi!");
-                  setIsLoggedInLocal(true);
-                  setIsLoggedIn(true);
-                  setUserData(user);
-                  
-                  // Admin foydalanuvchilarni admin panelga yo'naltirish
-                  if (user.role === 'admin') {
-                    window.location.href = '/admin';
-                    return;
-                  }
-                  
-                  // Profilga yo'naltirish
-                  window.location.hash = '#profile';
-                }}
-                onError={(error) => {
-                  setError(error);
-                }}
-              />
-            )}
+
           </Card>
 
           <div className="text-center mt-6">

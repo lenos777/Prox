@@ -8,7 +8,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { handleDemo } from "./routes/demo";
-import telegramAuthRoutes from "./routes/telegram-auth";
+
 import { WebSocketServer } from 'ws';
 import { AdminNotification, NotificationEvent } from '../shared/api';
 import http from 'http';
@@ -115,9 +115,7 @@ export function createServer() {
         ],
         default: [{ date: '', score: 0 }]
       },
-      telegramCode: { type: String, default: '' },
-      telegramCodeExpiry: { type: Date, default: null },
-      telegramChatId: { type: Number, default: null },
+
     }));
 
     // --- MIGRATION FUNCTION ---
@@ -242,8 +240,7 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
 
-  // Telegram authentication routes
-  app.use("/api/auth/telegram", telegramAuthRoutes);
+
 
   // Public courses endpoint for main site
   app.get("/api/courses", async (req, res) => {
@@ -394,25 +391,12 @@ export function createServer() {
     }
   });
 
-  // 1. Telegram kodni tekshiruvchi endpoint
-  app.post("/api/auth/verify-telegram-code", async (req, res) => {
-    try {
-      const { code } = req.body;
-      if (!code) return res.status(400).json({ success: false, message: "Kod kiritilmagan" });
-      const user = await User.findOne({ telegramCode: code });
-      if (!user || !user.telegramChatId) {
-        return res.status(400).json({ success: false, message: "Kod noto'g'ri yoki Telegramda tasdiqlanmagan" });
-      }
-      return res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ success: false, message: "Server xatosi" });
-    }
-  });
 
-  // 2. Register endpointni kod va chatId tekshiruv bilan yangilash
+
+  // Register endpoint
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { fullName, phone, password, role = 'student', telegramCode } = req.body;
+      const { fullName, phone, password, role = 'student' } = req.body;
       let formattedPhone = phone.replace(/\s/g, '');
       if (!formattedPhone.startsWith('+998')) {
         formattedPhone = '+998' + formattedPhone.replace(/^\+/, '');
@@ -424,15 +408,6 @@ export function createServer() {
       if (role !== 'admin' && role !== 'student' && role !== 'student_offline') {
         return res.status(400).json({ success: false, message: "Noto'g'ri role tanlandi" });
       }
-      // --- TELEGRAM KOD VA CHATID TEKSHIRUV ---
-      if (!telegramCode) {
-        return res.status(400).json({ success: false, message: "Telegramdan olingan kod kiritilmagan" });
-      }
-      const telegramUser = await User.findOne({ telegramCode });
-      if (!telegramUser || !telegramUser.telegramChatId) {
-        return res.status(400).json({ success: false, message: "Kod noto'g'ri yoki Telegramda tasdiqlanmagan" });
-      }
-      // --- END TELEGRAM KOD VA CHATID TEKSHIRUV ---
       const hashedPassword = await bcrypt.hash(password, 12);
       const userData = {
         fullName,
@@ -444,14 +419,9 @@ export function createServer() {
         createdAt: new Date(),
         step: 1,
         todayScores: [{ date: '', score: 0 }],
-        telegramCode: '', // kod ishlatilgach tozalanadi
-        telegramChatId: telegramUser.telegramChatId,
       };
       const user = new User(userData);
       await user.save();
-      // Kod ishlatilgach, telegramUser telegramCode ni tozalash
-      telegramUser.telegramCode = '';
-      await telegramUser.save();
       const token = jwt.sign(
         { userId: user._id, phone: user.phone, role: user.role },
         JWT_SECRET,
@@ -478,42 +448,7 @@ export function createServer() {
     }
   });
 
-  // Pending register endpoint: creates a user with telegramCode, no telegramChatId
-  app.post("/api/auth/pending-register", async (req, res) => {
-    try {
-      const { fullName, phone, password, role = 'student', telegramCode } = req.body;
-      let formattedPhone = phone.replace(/\s/g, '');
-      if (!formattedPhone.startsWith('+998')) {
-        formattedPhone = '+998' + formattedPhone.replace(/^\+/, '');
-      }
-      const existingUser = await User.findOne({ phone: formattedPhone });
-      if (existingUser) {
-        return res.status(400).json({ success: false, message: "Bu telefon raqam allaqachon ro'yxatdan o'tgan" });
-      }
-      if (!telegramCode) {
-        return res.status(400).json({ success: false, message: "Telegramdan olingan kod kiritilmagan" });
-      }
-      const hashedPassword = await bcrypt.hash(password, 12);
-      const userData = {
-        fullName,
-        phone: formattedPhone,
-        password: hashedPassword,
-        role,
-        balance: 0,
-        enrolledCourses: [],
-        createdAt: new Date(),
-        step: 1,
-        todayScores: [{ date: '', score: 0 }],
-        telegramCode,
-        telegramChatId: null,
-      };
-      const user = new User(userData);
-      await user.save();
-      res.status(201).json({ success: true, message: "Kod generatsiya qilindi va user DBga saqlandi" });
-    } catch (error) {
-      res.status(500).json({ success: false, message: "Server xatosi" });
-    }
-  });
+
 
   // User login
   app.post("/api/auth/login", async (req, res) => {
@@ -1957,29 +1892,20 @@ export function createServer() {
     }
   });
 
-  // Telegram deep-link auto verify endpoint
-  app.post("/api/auth/telegram-auto-verify", async (req, res) => {
-    try {
-      const { code, chatId } = req.body;
-      if (!code || !chatId) {
-        return res.status(400).json({ success: false, message: "Kod va chatId kerak" });
-      }
-      const user = await User.findOne({ telegramCode: code });
-      if (!user) {
-        return res.status(400).json({ success: false, message: "Kod noto'g'ri yoki eskirgan" });
-      }
-      user.telegramChatId = chatId;
-      user.telegramCode = '';
-      await user.save();
-      const token = jwt.sign(
-        { userId: user._id, phone: user.phone, role: user.role },
-        JWT_SECRET,
-        { expiresIn: "7d" }
-      );
-      res.json({ success: true, token });
-    } catch (error) {
-      res.status(500).json({ success: false, message: "Server xatosi" });
+
+
+  // Serve static files for the frontend
+  const distPath = path.join(process.cwd(), 'dist/spa');
+  app.use(express.static(distPath));
+
+  // Handle React Router - serve index.html for all non-API routes
+  app.get("*", (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith("/api/") || req.path.startsWith("/health") || req.path.startsWith("/ws/")) {
+      return res.status(404).json({ error: "API endpoint not found" });
     }
+
+    res.sendFile(path.join(distPath, "index.html"));
   });
 
   const server = http.createServer(app);
@@ -1989,6 +1915,14 @@ export function createServer() {
   wsServer.on('connection', (ws) => {
     wsClients.add(ws);
     ws.on('close', () => wsClients.delete(ws));
+  });
+
+  // Start the server
+  const port = process.env.PORT || 3000;
+  server.listen(port, () => {
+    console.log(`🚀 Server running on port ${port}`);
+    console.log(`📱 Frontend: http://localhost:${port}`);
+    console.log(`🔧 API: http://localhost:${port}/api`);
   });
 
   return server;

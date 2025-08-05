@@ -41,38 +41,7 @@ export interface Lesson {
   updatedAt: string;
 }
 
-// Telegram authentication types
-export interface TelegramAuthRequest {
-  fullName: string;
-  phone: string;
-  password: string;
-  role?: 'student' | 'admin' | 'student_offline';
-}
 
-export interface TelegramAuthResponse {
-  success: boolean;
-  message: string;
-  telegramCode?: string;
-  botUrl?: string;
-  expiresAt?: string;
-}
-
-export interface TelegramVerificationRequest {
-  code: string;
-}
-
-export interface TelegramVerificationResponse {
-  success: boolean;
-  message: string;
-  token?: string;
-  user?: {
-    id: string;
-    fullName: string;
-    phone: string;
-    role: string;
-    balance: number;
-  };
-}
 
 // WebSocket event types
 export type NotificationEvent =

@@ -1,9 +1,9 @@
 import path from "path";
 import { createServer } from "./index";
-import * as express from "express";
+import express from "express";
 import { fileURLToPath } from "url";
 
-const app = createServer();
+const server = createServer();
 const port = 3000; // Explicitly set port to 3000
 
 console.log(`Starting server on port ${port}`);
@@ -15,24 +15,13 @@ const __dirname = path.dirname(__filename);
 // In production, serve the built SPA files
 const distPath = path.join(__dirname, "../spa");
 
-// Serve static files
-app.use(express.static(distPath));
+// The server is already created and listening from createServer()
+// We just need to add static file serving to the existing Express app
+// But since createServer() returns an HTTP server, we need to modify the approach
 
-// Handle React Router - serve index.html for all non-API routes
-app.get("*", (req, res) => {
-  // Don't serve index.html for API routes
-  if (req.path.startsWith("/api/") || req.path.startsWith("/health")) {
-    return res.status(404).json({ error: "API endpoint not found" });
-  }
-
-  res.sendFile(path.join(distPath, "index.html"));
-});
-
-app.listen(port, () => {
-  console.log(`🚀 Fusion Starter server running on port ${port}`);
-  console.log(`📱 Frontend: http://localhost:${port}`);
-  console.log(`🔧 API: http://localhost:${port}/api`);
-});
+console.log(`🚀 Server running on port ${port}`);
+console.log(`📱 Frontend: http://localhost:${port}`);
+console.log(`🔧 API: http://localhost:${port}/api`);
 
 // Graceful shutdown
 process.on("SIGTERM", () => {

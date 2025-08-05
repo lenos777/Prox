@@ -1,0 +1,164 @@
+🚀 PROX LOYIHASINI VPS GA DEPLOY QILISH YO'RIQNOMASI
+=======================================================
+
+Server: 45.92.173.33
+User: root
+Domain: prox.uz
+
+📋 QADAMLAR:
+
+1️⃣ SSH orqali serverga ulanish:
+   - PuTTY yoki Windows Terminal ishlatib quyidagi manzilga ulaning:
+   - Host: 45.92.173.33
+   - User: root
+   - Port: 22
+
+2️⃣ Quyidagi buyruqlarni ketma-ket bajaring:
+
+# Sistema yangilash
+apt update && apt upgrade -y
+
+# Node.js o'rnatish
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt-get install -y nodejs
+
+# Git, Nginx va PM2 o'rnatish
+apt install git nginx -y
+npm install -g pm2
+
+# Loyiha papkasini yaratish
+mkdir -p /opt/prox-app
+cd /opt/prox-app
+
+# Loyihani yuklab olish
+git clone https://github.com/lenos777/Prox.git .
+
+# Environment faylini yaratish
+cat > .env << 'EOF'
+MONGODB_URI=mongodb+srv://opscoder:PRv5ASUw6d5Qunz7@cluster0.s5obnul.mongodb.net/proX?retryWrites=true&w=majority&appName=Cluster0
+JWT_SECRET=prox-super-secret-jwt-key-production-2025
+PORT=8080
+NODE_ENV=production
+TELEGRAM_BOT_TOKEN=8038376421:AAFtbldLbquVurnRlc6mf08k_bx6xEwcc1I
+SITE_URL=http://prox.uz
+EOF
+
+# Dependencies o'rnatish va build
+npm install
+npm run build
+
+# Kerakli papkalar
+mkdir -p uploads/courses logs
+
+# PM2 konfiguratsiya
+cat > ecosystem.config.js << 'EOF'
+module.exports = {
+  apps: [{
+    name: 'prox-app',
+    script: 'dist/server/node-build.mjs',
+    instances: 1,
+    exec_mode: 'fork',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 8080
+    },
+    error_file: './logs/err.log',
+    out_file: './logs/out.log',
+    log_file: './logs/combined.log',
+    time: true,
+    max_memory_restart: '1G',
+    restart_delay: 4000,
+    max_restarts: 10,
+    min_uptime: '10s'
+  }]
+};
+EOF
+
+# PM2 bilan ishga tushirish
+pm2 stop prox-app 2>/dev/null || true
+pm2 delete prox-app 2>/dev/null || true
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
+
+# Nginx konfiguratsiya
+cat > /etc/nginx/sites-available/prox-app << 'EOF'
+server {
+    listen 80;
+    server_name prox.uz www.prox.uz 45.92.173.33;
+    
+    client_max_body_size 10M;
+    
+    location /api/ {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+    
+    location /uploads/ {
+        alias /opt/prox-app/uploads/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+    
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+}
+EOF
+
+# Nginx faollashtirish
+ln -sf /etc/nginx/sites-available/prox-app /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t
+systemctl restart nginx
+systemctl enable nginx
+
+# Firewall sozlash
+ufw --force enable
+ufw allow 22
+ufw allow 80
+ufw allow 443
+
+# Holat tekshirish
+pm2 status
+systemctl status nginx
+curl http://localhost:8080
+
+3️⃣ Deploy tugagandan keyin:
+
+✅ Sayt manzillari:
+   - http://prox.uz (DNS sozlangandan keyin)
+   - http://45.92.173.33 (hoziroq ishlaydi)
+
+📝 Keyingi qadamlar:
+   1. prox.uz domenini 45.92.173.33 IP ga yo'naltiring (DNS A record)
+   2. SSL sertifikat o'rnating:
+      apt install certbot python3-certbot-nginx -y
+      certbot --nginx -d prox.uz -d www.prox.uz
+
+🔧 Foydali buyruqlar:
+   - Loglarni ko'rish: pm2 logs prox-app
+   - Monitoring: pm2 monit
+   - Qayta ishga tushirish: pm2 restart prox-app
+   - Nginx loglar: tail -f /var/log/nginx/error.log
+   - Yangilanish: cd /opt/prox-app && git pull && npm run build && pm2 restart prox-app
+
+=======================================================

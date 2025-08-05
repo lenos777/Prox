@@ -6,8 +6,9 @@ import { createServer } from "./server";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
-    port: 8080,
+    host: "::", // allows all interfaces
+    port: 8081,
+    allowedHosts: ["prox.uz", "www.prox.uz", "localhost", "127.0.0.1"], // muhim qism
   },
   build: {
     outDir: "dist/spa",
@@ -24,7 +25,7 @@ export default defineConfig(({ mode }) => ({
 function expressPlugin(): Plugin {
   return {
     name: "express-plugin",
-    apply: "serve", // Only apply during development (serve mode)
+    apply: "serve", // Only apply during development
     configureServer(server) {
       const app = createServer();
 
