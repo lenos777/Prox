@@ -1,3 +1,4 @@
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { PlayCircle, ChevronDown, ChevronRight, Menu, ChevronLeft, ChevronRight as ChevronRightNav, Home } from "lucide-react";
@@ -181,7 +182,7 @@ export default function Learning() {
                             return (
                               <button
                                 key={lesson._id || lesson.id}
-                                  className={`w-full flex flex-row items-center gap-2 py-1 px-2 text-sm rounded-md transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-cyan-900 to-blue-900 text-cyan-300 font-semibold' : 'text-gray-300 hover:bg-slate-800 hover:text-white'}`}
+                                  className={`w-full flex flex-row items-center gap-2 py-1 px-2 text-base rounded-md transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-cyan-900 to-blue-900 text-cyan-300 font-semibold' : 'text-gray-300 hover:bg-slate-800 hover:text-white'}`}
                                 onClick={() => {
                                   setSelectedModuleId(modId);
                                   setSelectedLesson(lesson);
@@ -296,7 +297,7 @@ export default function Learning() {
                                 return (
                                   <button
                                     key={lesson._id || lesson.id}
-                                    className={`w-full flex flex-row items-center gap-2 py-1 px-2 text-sm rounded-md transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-cyan-900 to-blue-900 text-cyan-300 font-semibold' : 'text-gray-300 hover:bg-slate-800 hover:text-white'}`}
+                                    className={`w-full flex flex-row items-center gap-2 py-1 px-2 text-base rounded-md transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-cyan-900 to-blue-900 text-cyan-300 font-semibold' : 'text-gray-300 hover:bg-slate-800 hover:text-white'}`}
                                     onClick={() => {
                                       setSelectedModuleId(modId);
                                       setSelectedLesson(lesson);
@@ -398,11 +399,11 @@ export default function Learning() {
         {/* Video */}
         <div className="flex flex-col items-center justify-center w-full px-4 py-8">
           <div className="w-full max-w-3xl aspect-video rounded-2xl flex items-center justify-center mb-8 border shadow-2xl overflow-hidden bg-card border-border">
-            {loadingLessons[selectedModuleId] ? (
+            {selectedModuleId && loadingLessons[selectedModuleId] ? (
               <Skeleton className="w-full h-full rounded-2xl" />
             ) : selectedLesson && selectedLesson.videoUrl ? (
               <video
-                src={selectedLesson.videoUrl}
+                src={selectedLesson?.videoUrl}
                 controls
                 className="w-full h-full rounded-2xl"
                 poster={selectedLesson.posterUrl || undefined}
@@ -414,7 +415,7 @@ export default function Learning() {
           </div>
           {/* Video ma'lumotlari */}
           <div className="w-full max-w-3xl rounded-xl p-6 border shadow-md bg-card border-border mb-6">
-            {loadingLessons[selectedModuleId] ? (
+            {selectedModuleId && loadingLessons[selectedModuleId] ? (
               <>
                 <Skeleton className="h-8 w-1/2 mb-2 rounded" />
                 <Skeleton className="h-4 w-full mb-2 rounded" />
