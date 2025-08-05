@@ -172,7 +172,7 @@ export default function Learning() {
                         {isOpen ? <ChevronDown className="w-5 h-5 text-cyan-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                     </button>
                     {isOpen && (
-                        <div className="pl-4 pb-0.5 flex flex-col gap-1">
+                        <div className="pl-4 pt-0.5 pb-0.5 flex flex-col gap-1">
                         {(loadingLessons[modId]) ? (
                             <div className="text-xs px-2 text-gray-400">Yuklanmoqda...</div>
                         ) : lessonsByModule[modId] && lessonsByModule[modId].length > 0 ? (
@@ -287,7 +287,7 @@ export default function Learning() {
                           {isOpen ? <ChevronDown className="w-5 h-5 text-cyan-400" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                         </button>
                         {isOpen && (
-                          <div className="pl-4 pb-0.5 flex flex-col gap-1">
+                          <div className="pl-4 pt-0.5 pb-0.5 flex flex-col gap-1">
                             {(loadingLessons[modId]) ? (
                               <div className="text-xs px-2 text-gray-400">Yuklanmoqda...</div>
                             ) : lessonsByModule[modId] && lessonsByModule[modId].length > 0 ? (
